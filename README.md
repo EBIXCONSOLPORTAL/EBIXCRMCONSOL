@@ -12,6 +12,7 @@
             --light-color: #ecf0f1;
             --danger-color: #e74c3c;
             --success-color: #2ecc71;
+            --warning-color: #f39c12;
         }
 
         * {
@@ -114,6 +115,7 @@
             padding: 10px;
             margin-bottom: 20px;
             border-radius: 5px;
+            flex-wrap: wrap;
         }
 
         .nav-menu.dark-theme {
@@ -123,6 +125,7 @@
         .nav-menu button {
             padding: 10px 15px;
             margin-right: 10px;
+            margin-bottom: 5px;
             border: none;
             background-color: transparent;
             cursor: pointer;
@@ -187,6 +190,8 @@
             cursor: pointer;
             font-size: 16px;
             transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
         }
 
         .btn-primary {
@@ -205,6 +210,11 @@
 
         .btn-success {
             background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
             color: white;
         }
 
@@ -276,10 +286,12 @@
             display: flex;
             gap: 15px;
             margin-bottom: 10px;
+            flex-wrap: wrap;
         }
 
         .filter-group {
             flex: 1;
+            min-width: 200px;
         }
 
         .filter-group label {
@@ -326,6 +338,116 @@
 
         .dashboard-footer.dark-theme {
             border-top: 1px solid #555;
+        }
+
+        .status-create {
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        .status-accept {
+            color: #2ecc71;
+            font-weight: 600;
+        }
+
+        .status-running {
+            color: #f39c12;
+            font-weight: 600;
+        }
+
+        .status-hold {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .status-holiday {
+            color: #9b59b6;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal.dark-theme .modal-content {
+            background-color: #333;
+            color: white;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            margin: 0 5px;
+            border: 1px solid #ddd;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .pagination button.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .record-count {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        .record-count.dark-theme {
+            color: #aaa;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                width: 90%;
+                margin: 50px auto;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .filter-group {
+                min-width: 100%;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
         }
     </style>
 </head>
@@ -391,10 +513,42 @@
                         </select>
                     </div>
                     <div class="filter-group">
+                        <label for="customer-name-filter">Customer Name</label>
+                        <input type="text" id="customer-name-filter" placeholder="Search by name">
+                    </div>
+                    <div class="filter-group">
+                        <label for="machine-filter">Machine Name</label>
+                        <input type="text" id="machine-filter" placeholder="Search by machine">
+                    </div>
+                    <div class="filter-group">
+                        <label for="date-range-filter">Date Range</label>
+                        <select id="date-range-filter">
+                            <option value="">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="custom-date-filter-group" style="display: none;">
+                        <label for="custom-date-from-filter">From</label>
+                        <input type="date" id="custom-date-from-filter">
+                    </div>
+                    <div class="filter-group" id="custom-date-to-filter-group" style="display: none;">
+                        <label for="custom-date-to-filter">To</label>
+                        <input type="date" id="custom-date-to-filter">
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group">
                         <button class="btn btn-primary" id="search-btn">Search</button>
+                        <button class="btn btn-warning" id="reset-filters-btn">Reset Filters</button>
+                        <button class="btn btn-success" id="export-csv-btn">Export to CSV</button>
                     </div>
                 </div>
             </div>
+            
+            <div class="record-count" id="job-requests-count"></div>
             
             <table class="records-table">
                 <thead>
@@ -412,11 +566,15 @@
                     <!-- Dynamic content will be loaded here -->
                 </tbody>
             </table>
+            
+            <div class="pagination" id="job-requests-pagination">
+                <!-- Pagination will be loaded here -->
+            </div>
         </div>
         
         <!-- New Customer Section -->
         <div id="new-customer" class="content-area section-content" style="display: none;">
-            <h3>New Customer Information</h3>
+            <h3 id="customer-form-title">New Customer Information</h3>
             <form id="customer-form">
                 <div class="form-row">
                     <div class="form-group">
@@ -521,6 +679,7 @@
                 <div class="file-upload">
                     <label for="image-upload">Upload Image</label>
                     <input type="file" id="image-upload" accept="image/*">
+                    <div id="image-preview" style="margin-top: 10px;"></div>
                 </div>
                 
                 <div class="file-upload">
@@ -534,8 +693,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <button type="button" class="btn" id="print-pdf">Print PDF</button>
+                    <button type="submit" class="btn btn-primary" id="save-customer-btn">Save</button>
+                    <button type="button" class="btn btn-warning" id="cancel-edit-btn" style="display: none;">Cancel</button>
+                    <button type="button" class="btn btn-success" id="print-pdf">Print PDF</button>
                 </div>
             </form>
         </div>
@@ -557,6 +717,37 @@
                         </select>
                     </div>
                     <div class="filter-group">
+                        <label for="view-warranty-filter">Warranty Status</label>
+                        <select id="view-warranty-filter">
+                            <option value="">All</option>
+                            <option value="in-warranty">In Warranty</option>
+                            <option value="out-warranty">Out of Warranty</option>
+                            <option value="amc">AMC</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="view-engineer-filter">Assigned Engineer</label>
+                        <select id="view-engineer-filter">
+                            <option value="">All</option>
+                            <option value="EI102019004">Dev Makwana</option>
+                            <option value="EI112034005">Hanuman Bishnoi</option>
+                            <option value="EI4590778809">Mukesh Tanwar</option>
+                            <option value="EI889906551">Dharmendra Singh</option>
+                            <option value="unassigned">Unassigned</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="view-payment-filter">Payment Status</label>
+                        <select id="view-payment-filter">
+                            <option value="">All</option>
+                            <option value="pending">Pending</option>
+                            <option value="partial">Partial</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group">
                         <label for="date-from">From Date</label>
                         <input type="date" id="date-from">
                     </div>
@@ -565,10 +756,17 @@
                         <input type="date" id="date-to">
                     </div>
                     <div class="filter-group">
+                        <label for="search-text">Search Text</label>
+                        <input type="text" id="search-text" placeholder="Search in all fields">
+                    </div>
+                    <div class="filter-group">
                         <button class="btn btn-primary" id="view-search-btn">Search</button>
+                        <button class="btn btn-warning" id="view-reset-btn">Reset</button>
                     </div>
                 </div>
             </div>
+            
+            <div class="record-count" id="all-records-count"></div>
             
             <table class="records-table">
                 <thead>
@@ -581,6 +779,7 @@
                         <th>Warranty</th>
                         <th>Date</th>
                         <th>Assigned Engineer</th>
+                        <th>Payment</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -588,6 +787,10 @@
                     <!-- Dynamic content will be loaded here -->
                 </tbody>
             </table>
+            
+            <div class="pagination" id="all-records-pagination">
+                <!-- Pagination will be loaded here -->
+            </div>
         </div>
         
         <!-- Engineer Assignment Section -->
@@ -625,6 +828,36 @@
             </form>
             
             <h4>Current Assignments</h4>
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="assignment-engineer-filter">Filter by Engineer</label>
+                        <select id="assignment-engineer-filter">
+                            <option value="">All Engineers</option>
+                            <option value="EI102019004">Dev Makwana</option>
+                            <option value="EI112034005">Hanuman Bishnoi</option>
+                            <option value="EI4590778809">Mukesh Tanwar</option>
+                            <option value="EI889906551">Dharmendra Singh</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="assignment-status-filter">Filter by Status</label>
+                        <select id="assignment-status-filter">
+                            <option value="">All Statuses</option>
+                            <option value="Assigned">Assigned</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="On Hold">On Hold</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button class="btn btn-primary" id="assignment-search-btn">Filter</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="record-count" id="assignments-count"></div>
+            
             <table class="records-table">
                 <thead>
                     <tr>
@@ -640,6 +873,10 @@
                     <!-- Dynamic content will be loaded here -->
                 </tbody>
             </table>
+            
+            <div class="pagination" id="assignments-pagination">
+                <!-- Pagination will be loaded here -->
+            </div>
         </div>
         
         <!-- Settings Section -->
@@ -745,10 +982,16 @@
                         <input type="date" id="custom-date-to">
                     </div>
                     <div class="filter-group">
-                        <button class="btn btn-primary" id="generate-report-btn">Generate Report</button>
+                        <label for="report-format">Report Format</label>
+                        <select id="report-format">
+                            <option value="summary">Summary</option>
+                            <option value="detailed">Detailed</option>
+                        </select>
                     </div>
                     <div class="filter-group">
+                        <button class="btn btn-primary" id="generate-report-btn">Generate Report</button>
                         <button class="btn btn-success" id="print-report-btn">Print Report</button>
+                        <button class="btn btn-warning" id="export-report-btn">Export Report</button>
                     </div>
                 </div>
             </div>
@@ -759,8 +1002,8 @@
                     <!-- Report summary will be displayed here -->
                 </div>
                 
-                <h4>Detailed Records</h4>
-                <table class="records-table">
+                <h4 id="detailed-records-heading" style="display: none;">Detailed Records</h4>
+                <table class="records-table" id="report-records-table" style="display: none;">
                     <thead>
                         <tr>
                             <th>Record ID</th>
@@ -769,9 +1012,10 @@
                             <th>Status</th>
                             <th>Date</th>
                             <th>Engineer</th>
+                            <th>Payment</th>
                         </tr>
                     </thead>
-                    <tbody id="report-records-table">
+                    <tbody>
                         <!-- Report records will be displayed here -->
                     </tbody>
                 </table>
@@ -783,8 +1027,18 @@
         </div>
     </div>
 
+    <!-- Record Details Modal -->
+    <div id="record-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="modal-content">
+                <!-- Modal content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Sample data for demonstration
+        // Enhanced sample data for demonstration
         let records = [
             {
                 id: 1,
@@ -801,9 +1055,9 @@
                 machineSerial: 'SN123456',
                 warrantyStatus: 'in-warranty',
                 recordStatus: 'create',
-                date: '2023-05-15',
+                date: new Date().toISOString().split('T')[0],
                 assignedEngineer: '',
-                remarks: '',
+                remarks: 'Initial complaint registered',
                 balance: 0,
                 paymentStatus: 'pending',
                 images: [],
@@ -824,10 +1078,79 @@
                 machineSerial: 'SN789012',
                 warrantyStatus: 'out-warranty',
                 recordStatus: 'accept',
-                date: '2023-05-16',
+                date: new Date().toISOString().split('T')[0],
                 assignedEngineer: 'EI102019004',
                 remarks: 'Urgent repair needed',
                 balance: 2500,
+                paymentStatus: 'partial',
+                images: [],
+                files: []
+            },
+            {
+                id: 3,
+                customerNumber: 'CUST003',
+                customerName: 'Robert Johnson',
+                surname: 'Johnson',
+                email: 'robert@example.com',
+                phone: '9876543212',
+                address: '789 Pine Rd, Bangalore',
+                pincode: '560001',
+                state: 'Karnataka',
+                country: 'India',
+                machineName: 'Copier DEF',
+                machineSerial: 'SN345678',
+                warrantyStatus: 'amc',
+                recordStatus: 'running',
+                date: new Date().toISOString().split('T')[0],
+                assignedEngineer: 'EI112034005',
+                remarks: 'Regular maintenance',
+                balance: 5000,
+                paymentStatus: 'completed',
+                images: [],
+                files: []
+            },
+            {
+                id: 4,
+                customerNumber: 'CUST004',
+                customerName: 'Emily Davis',
+                surname: 'Davis',
+                email: 'emily@example.com',
+                phone: '9876543213',
+                address: '321 Elm St, Chennai',
+                pincode: '600001',
+                state: 'Tamil Nadu',
+                country: 'India',
+                machineName: 'Fax Machine GHI',
+                machineSerial: 'SN901234',
+                warrantyStatus: 'in-warranty',
+                recordStatus: 'hold',
+                date: new Date().toISOString().split('T')[0],
+                assignedEngineer: '',
+                remarks: 'Waiting for parts',
+                balance: 1500,
+                paymentStatus: 'pending',
+                images: [],
+                files: []
+            },
+            {
+                id: 5,
+                customerNumber: 'CUST005',
+                customerName: 'Michael Wilson',
+                surname: 'Wilson',
+                email: 'michael@example.com',
+                phone: '9876543214',
+                address: '654 Maple Ave, Kolkata',
+                pincode: '700001',
+                state: 'West Bengal',
+                country: 'India',
+                machineName: 'Printer JKL',
+                machineSerial: 'SN567890',
+                warrantyStatus: 'out-warranty',
+                recordStatus: 'public-holiday',
+                date: new Date().toISOString().split('T')[0],
+                assignedEngineer: 'EI4590778809',
+                remarks: 'Service scheduled after holiday',
+                balance: 3000,
                 paymentStatus: 'partial',
                 images: [],
                 files: []
@@ -840,9 +1163,27 @@
                 customerName: 'Jane Smith',
                 engineerId: 'EI102019004',
                 engineerName: 'Dev Makwana',
-                assignmentDate: '2023-05-16',
+                assignmentDate: new Date().toISOString().split('T')[0],
                 status: 'Assigned',
                 remarks: 'Urgent repair needed'
+            },
+            {
+                recordId: 3,
+                customerName: 'Robert Johnson',
+                engineerId: 'EI112034005',
+                engineerName: 'Hanuman Bishnoi',
+                assignmentDate: new Date().toISOString().split('T')[0],
+                status: 'In Progress',
+                remarks: 'Regular maintenance'
+            },
+            {
+                recordId: 5,
+                customerName: 'Michael Wilson',
+                engineerId: 'EI4590778809',
+                engineerName: 'Mukesh Tanwar',
+                assignmentDate: new Date().toISOString().split('T')[0],
+                status: 'On Hold',
+                remarks: 'Service scheduled after holiday'
             }
         ];
 
@@ -859,6 +1200,20 @@
         const body = document.body;
         const dashboardHeader = document.getElementById('dashboard-header');
         const dashboardFooter = document.getElementById('dashboard-footer');
+        const recordModal = document.getElementById('record-modal');
+        const closeModal = document.querySelector('.close-modal');
+        const modalContent = document.getElementById('modal-content');
+        const customerFormTitle = document.getElementById('customer-form-title');
+        const saveCustomerBtn = document.getElementById('save-customer-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+
+        // Pagination variables
+        const recordsPerPage = 5;
+        let currentPage = {
+            'job-requests': 1,
+            'records-view': 1,
+            'engineer-assignment': 1
+        };
 
         // Login functionality
         loginForm.addEventListener('submit', function(e) {
@@ -904,6 +1259,8 @@
                     loadAllRecords();
                 } else if (sectionId === 'engineer-assignment') {
                     loadAssignmentRecords();
+                } else if (sectionId === 'new-customer') {
+                    resetCustomerForm();
                 }
             }
         });
@@ -936,6 +1293,8 @@
                 document.querySelectorAll('.filter-section').forEach(el => el.classList.add('dark-theme'));
                 document.querySelectorAll('.records-table').forEach(el => el.classList.add('dark-theme'));
                 document.querySelectorAll('.settings-panel').forEach(el => el.classList.add('dark-theme'));
+                document.querySelectorAll('.record-count').forEach(el => el.classList.add('dark-theme'));
+                document.querySelector('.modal-content').classList.add('dark-theme');
             } else {
                 body.classList.remove('dark-theme');
                 dashboardHeader.classList.remove('dark-theme');
@@ -945,6 +1304,8 @@
                 document.querySelectorAll('.filter-section').forEach(el => el.classList.remove('dark-theme'));
                 document.querySelectorAll('.records-table').forEach(el => el.classList.remove('dark-theme'));
                 document.querySelectorAll('.settings-panel').forEach(el => el.classList.remove('dark-theme'));
+                document.querySelectorAll('.record-count').forEach(el => el.classList.remove('dark-theme'));
+                document.querySelector('.modal-content').classList.remove('dark-theme');
             }
         });
 
@@ -956,13 +1317,14 @@
             customerNumber.value = 'CUST' + nextId.toString().padStart(3, '0');
         }
 
-        // Load job requests
-        function loadJobRequests(filterStatus = '', filterWarranty = '') {
+        // Load job requests with pagination
+        function loadJobRequests(filterStatus = '', filterWarranty = '', customerName = '', machineName = '', dateRange = '', customFrom = '', customTo = '', page = 1) {
             const tableBody = document.getElementById('job-requests-table');
             tableBody.innerHTML = '';
             
-            let filteredRecords = records;
+            let filteredRecords = [...records];
             
+            // Apply filters
             if (filterStatus) {
                 filteredRecords = filteredRecords.filter(r => r.recordStatus === filterStatus);
             }
@@ -971,7 +1333,71 @@
                 filteredRecords = filteredRecords.filter(r => r.warrantyStatus === filterWarranty);
             }
             
-            filteredRecords.forEach(record => {
+            if (customerName) {
+                const searchTerm = customerName.toLowerCase();
+                filteredRecords = filteredRecords.filter(r => 
+                    r.customerName.toLowerCase().includes(searchTerm) || 
+                    r.surname.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (machineName) {
+                const searchTerm = machineName.toLowerCase();
+                filteredRecords = filteredRecords.filter(r => 
+                    r.machineName.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (dateRange) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (dateRange === 'today') {
+                    filteredRecords = filteredRecords.filter(r => {
+                        const recordDate = new Date(r.date);
+                        return recordDate.toDateString() === today.toDateString();
+                    });
+                } else if (dateRange === 'week') {
+                    const firstDay = new Date(today);
+                    firstDay.setDate(firstDay.getDate() - firstDay.getDay());
+                    
+                    const lastDay = new Date(firstDay);
+                    lastDay.setDate(lastDay.getDate() + 6);
+                    
+                    filteredRecords = filteredRecords.filter(r => {
+                        const recordDate = new Date(r.date);
+                        return recordDate >= firstDay && recordDate <= lastDay;
+                    });
+                } else if (dateRange === 'month') {
+                    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    
+                    filteredRecords = filteredRecords.filter(r => {
+                        const recordDate = new Date(r.date);
+                        return recordDate >= firstDay && recordDate <= lastDay;
+                    });
+                } else if (dateRange === 'custom' && customFrom && customTo) {
+                    filteredRecords = filteredRecords.filter(r => {
+                        return r.date >= customFrom && r.date <= customTo;
+                    });
+                }
+            }
+            
+            // Update record count
+            const recordCount = filteredRecords.length;
+            document.getElementById('job-requests-count').textContent = `Showing ${recordCount} records`;
+            
+            // Calculate pagination
+            const totalPages = Math.ceil(recordCount / recordsPerPage);
+            currentPage['job-requests'] = Math.min(page, totalPages);
+            
+            // Get records for current page
+            const startIndex = (currentPage['job-requests'] - 1) * recordsPerPage;
+            const endIndex = Math.min(startIndex + recordsPerPage, recordCount);
+            const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
+            
+            // Populate table
+            paginatedRecords.forEach(record => {
                 const row = document.createElement('tr');
                 
                 const statusClass = getStatusClass(record.recordStatus);
@@ -987,28 +1413,18 @@
                     <td class="action-buttons">
                         <button class="btn btn-primary edit-btn" data-id="${record.id}">Edit</button>
                         <button class="btn btn-danger delete-btn" data-id="${record.id}">Delete</button>
+                        <button class="btn btn-success view-btn" data-id="${record.id}">View</button>
                     </td>
                 `;
                 
                 tableBody.appendChild(row);
             });
             
-            // Add event listeners to edit and delete buttons
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const recordId = parseInt(this.getAttribute('data-id'));
-                    editRecord(recordId);
-                });
-            });
+            // Add event listeners to buttons
+            addRecordEventListeners();
             
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const recordId = parseInt(this.getAttribute('data-id'));
-                    if (confirm('Are you sure you want to delete this record?')) {
-                        deleteRecord(recordId);
-                    }
-                });
-            });
+            // Update pagination controls
+            updatePagination('job-requests', totalPages);
         }
 
         // Get status class for styling
@@ -1033,13 +1449,170 @@
             }
         }
 
+        // Add event listeners to record buttons
+        function addRecordEventListeners() {
+            // Edit buttons
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const recordId = parseInt(this.getAttribute('data-id'));
+                    editRecord(recordId);
+                });
+            });
+            
+            // Delete buttons
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const recordId = parseInt(this.getAttribute('data-id'));
+                    if (confirm('Are you sure you want to delete this record?')) {
+                        deleteRecord(recordId);
+                    }
+                });
+            });
+            
+            // View buttons
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const recordId = parseInt(this.getAttribute('data-id'));
+                    viewRecordDetails(recordId);
+                });
+            });
+        }
+
+        // Update pagination controls
+        function updatePagination(section, totalPages) {
+            const paginationDiv = document.getElementById(`${section}-pagination`);
+            paginationDiv.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentPage[section] === 1;
+            prevBtn.addEventListener('click', () => {
+                if (currentPage[section] > 1) {
+                    if (section === 'job-requests') {
+                        loadJobRequests(
+                            document.getElementById('status-filter').value,
+                            document.getElementById('warranty-filter').value,
+                            document.getElementById('customer-name-filter').value,
+                            document.getElementById('machine-filter').value,
+                            document.getElementById('date-range-filter').value,
+                            document.getElementById('custom-date-from-filter').value,
+                            document.getElementById('custom-date-to-filter').value,
+                            currentPage[section] - 1
+                        );
+                    } else if (section === 'records-view') {
+                        loadAllRecords(
+                            document.getElementById('view-status-filter').value,
+                            document.getElementById('view-warranty-filter').value,
+                            document.getElementById('view-engineer-filter').value,
+                            document.getElementById('view-payment-filter').value,
+                            document.getElementById('date-from').value,
+                            document.getElementById('date-to').value,
+                            document.getElementById('search-text').value,
+                            currentPage[section] - 1
+                        );
+                    } else if (section === 'engineer-assignment') {
+                        loadAssignmentRecords(
+                            document.getElementById('assignment-engineer-filter').value,
+                            document.getElementById('assignment-status-filter').value,
+                            currentPage[section] - 1
+                        );
+                    }
+                }
+            });
+            paginationDiv.appendChild(prevBtn);
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.className = currentPage[section] === i ? 'active' : '';
+                pageBtn.addEventListener('click', () => {
+                    if (section === 'job-requests') {
+                        loadJobRequests(
+                            document.getElementById('status-filter').value,
+                            document.getElementById('warranty-filter').value,
+                            document.getElementById('customer-name-filter').value,
+                            document.getElementById('machine-filter').value,
+                            document.getElementById('date-range-filter').value,
+                            document.getElementById('custom-date-from-filter').value,
+                            document.getElementById('custom-date-to-filter').value,
+                            i
+                        );
+                    } else if (section === 'records-view') {
+                        loadAllRecords(
+                            document.getElementById('view-status-filter').value,
+                            document.getElementById('view-warranty-filter').value,
+                            document.getElementById('view-engineer-filter').value,
+                            document.getElementById('view-payment-filter').value,
+                            document.getElementById('date-from').value,
+                            document.getElementById('date-to').value,
+                            document.getElementById('search-text').value,
+                            i
+                        );
+                    } else if (section === 'engineer-assignment') {
+                        loadAssignmentRecords(
+                            document.getElementById('assignment-engineer-filter').value,
+                            document.getElementById('assignment-status-filter').value,
+                            i
+                        );
+                    }
+                });
+                paginationDiv.appendChild(pageBtn);
+            }
+            
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = currentPage[section] === totalPages;
+            nextBtn.addEventListener('click', () => {
+                if (currentPage[section] < totalPages) {
+                    if (section === 'job-requests') {
+                        loadJobRequests(
+                            document.getElementById('status-filter').value,
+                            document.getElementById('warranty-filter').value,
+                            document.getElementById('customer-name-filter').value,
+                            document.getElementById('machine-filter').value,
+                            document.getElementById('date-range-filter').value,
+                            document.getElementById('custom-date-from-filter').value,
+                            document.getElementById('custom-date-to-filter').value,
+                            currentPage[section] + 1
+                        );
+                    } else if (section === 'records-view') {
+                        loadAllRecords(
+                            document.getElementById('view-status-filter').value,
+                            document.getElementById('view-warranty-filter').value,
+                            document.getElementById('view-engineer-filter').value,
+                            document.getElementById('view-payment-filter').value,
+                            document.getElementById('date-from').value,
+                            document.getElementById('date-to').value,
+                            document.getElementById('search-text').value,
+                            currentPage[section] + 1
+                        );
+                    } else if (section === 'engineer-assignment') {
+                        loadAssignmentRecords(
+                            document.getElementById('assignment-engineer-filter').value,
+                            document.getElementById('assignment-status-filter').value,
+                            currentPage[section] + 1
+                        );
+                    }
+                }
+            });
+            paginationDiv.appendChild(nextBtn);
+        }
+
         // Edit record
         function editRecord(recordId) {
             const record = records.find(r => r.id === recordId);
             if (!record) return;
             
-            // Switch to new customer section
+            // Switch to new customer section and update form title
             document.querySelector('[data-section="new-customer"]').click();
+            customerFormTitle.textContent = 'Edit Customer Information';
+            saveCustomerBtn.textContent = 'Update';
+            cancelEditBtn.style.display = 'inline-block';
             
             // Fill the form with record data
             document.getElementById('customer-number').value = record.customerNumber;
@@ -1064,11 +1637,12 @@
                 e.preventDefault();
                 updateRecord(recordId);
             };
-            
-            // Change save button text
-            const saveBtn = customerForm.querySelector('button[type="submit"]');
-            saveBtn.textContent = 'Update';
         }
+
+        // Cancel edit
+        cancelEditBtn.addEventListener('click', function() {
+            resetCustomerForm();
+        });
 
         // Update record
         function updateRecord(recordId) {
@@ -1096,28 +1670,243 @@
             };
             
             alert('Record updated successfully!');
-            document.querySelector('[data-section="job-requests"]').click();
             resetCustomerForm();
+            loadJobRequests();
+            loadAllRecords();
         }
 
         // Delete record
         function deleteRecord(recordId) {
             records = records.filter(r => r.id !== recordId);
+            assignments = assignments.filter(a => a.recordId !== recordId);
             loadJobRequests();
+            loadAllRecords();
+            loadAssignmentRecords();
         }
 
-        // Load all records
-        function loadAllRecords(filterStatus = '') {
+        // View record details in modal
+        function viewRecordDetails(recordId) {
+            const record = records.find(r => r.id === recordId);
+            if (!record) return;
+            
+            const assignedEngineer = assignments.find(a => a.recordId === recordId);
+            
+            let details = `
+                <h3>Record Details - ${record.customerNumber}</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Customer Name</label>
+                        <p>${record.customerName} ${record.surname}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Information</label>
+                        <p>${record.phone}<br>${record.email}</p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Address</label>
+                    <p>${record.address}, ${record.pincode}, ${record.state}, ${record.country}</p>
+                </div>
+                
+                <h4>Machine Information</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Machine Name</label>
+                        <p>${record.machineName}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Serial Number</label>
+                        <p>${record.machineSerial}</p>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Warranty Status</label>
+                        <p>${getWarrantyText(record.warrantyStatus)}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Record Status</label>
+                        <p><span class="${getStatusClass(record.recordStatus)}">${record.recordStatus}</span></p>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <p>${record.date}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned Engineer</label>
+                        <p>${assignedEngineer ? assignedEngineer.engineerName : 'Not assigned'}</p>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Payment Status</label>
+                        <p>${record.paymentStatus}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Balance</label>
+                        <p>₹${record.balance}</p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Remarks</label>
+                    <p>${record.remarks || 'No remarks'}</p>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-primary" onclick="editRecord(${record.id}); closeModalFunc();">Edit Record</button>
+                    ${assignedEngineer ? `<button class="btn btn-warning" onclick="viewAssignmentDetails(${record.id});">View Assignment</button>` : ''}
+                </div>
+            `;
+            
+            modalContent.innerHTML = details;
+            recordModal.style.display = 'block';
+        }
+
+        // View assignment details in modal
+        function viewAssignmentDetails(recordId) {
+            const assignment = assignments.find(a => a.recordId === recordId);
+            const record = records.find(r => r.id === recordId);
+            
+            if (!assignment || !record) return;
+            
+            let details = `
+                <h3>Assignment Details</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Record ID</label>
+                        <p>${record.customerNumber}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Customer</label>
+                        <p>${record.customerName}</p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Machine</label>
+                    <p>${record.machineName} (${record.machineSerial})</p>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Assigned Engineer</label>
+                        <p>${assignment.engineerName} (${assignment.engineerId})</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Assignment Date</label>
+                        <p>${assignment.assignmentDate}</p>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <p>${assignment.status}</p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Remarks</label>
+                    <p>${assignment.remarks || 'No remarks'}</p>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-primary" onclick="editAssignment(${record.id})">Edit Assignment</button>
+                    <button class="btn btn-danger" onclick="removeAssignment(${record.id}); closeModalFunc();">Remove Assignment</button>
+                </div>
+            `;
+            
+            modalContent.innerHTML = details;
+            recordModal.style.display = 'block';
+        }
+
+        // Close modal function
+        function closeModalFunc() {
+            recordModal.style.display = 'none';
+        }
+
+        // Close modal when clicking X
+        closeModal.addEventListener('click', closeModalFunc);
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === recordModal) {
+                closeModalFunc();
+            }
+        });
+
+        // Load all records with pagination
+        function loadAllRecords(filterStatus = '', filterWarranty = '', filterEngineer = '', filterPayment = '', dateFrom = '', dateTo = '', searchText = '', page = 1) {
             const tableBody = document.getElementById('all-records-table');
             tableBody.innerHTML = '';
             
-            let filteredRecords = records;
+            let filteredRecords = [...records];
             
+            // Apply filters
             if (filterStatus) {
                 filteredRecords = filteredRecords.filter(r => r.recordStatus === filterStatus);
             }
             
-            filteredRecords.forEach(record => {
+            if (filterWarranty) {
+                filteredRecords = filteredRecords.filter(r => r.warrantyStatus === filterWarranty);
+            }
+            
+            if (filterEngineer) {
+                if (filterEngineer === 'unassigned') {
+                    filteredRecords = filteredRecords.filter(r => !r.assignedEngineer);
+                } else {
+                    filteredRecords = filteredRecords.filter(r => r.assignedEngineer === filterEngineer);
+                }
+            }
+            
+            if (filterPayment) {
+                filteredRecords = filteredRecords.filter(r => r.paymentStatus === filterPayment);
+            }
+            
+            if (dateFrom && dateTo) {
+                filteredRecords = filteredRecords.filter(r => r.date >= dateFrom && r.date <= dateTo);
+            } else if (dateFrom) {
+                filteredRecords = filteredRecords.filter(r => r.date >= dateFrom);
+            } else if (dateTo) {
+                filteredRecords = filteredRecords.filter(r => r.date <= dateTo);
+            }
+            
+            if (searchText) {
+                const searchTerm = searchText.toLowerCase();
+                filteredRecords = filteredRecords.filter(r => 
+                    r.customerNumber.toLowerCase().includes(searchTerm) ||
+                    r.customerName.toLowerCase().includes(searchTerm) ||
+                    r.surname.toLowerCase().includes(searchTerm) ||
+                    r.email.toLowerCase().includes(searchTerm) ||
+                    r.phone.toLowerCase().includes(searchTerm) ||
+                    r.machineName.toLowerCase().includes(searchTerm) ||
+                    r.machineSerial.toLowerCase().includes(searchTerm) ||
+                    r.remarks.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Update record count
+            const recordCount = filteredRecords.length;
+            document.getElementById('all-records-count').textContent = `Showing ${recordCount} records`;
+            
+            // Calculate pagination
+            const totalPages = Math.ceil(recordCount / recordsPerPage);
+            currentPage['records-view'] = Math.min(page, totalPages);
+            
+            // Get records for current page
+            const startIndex = (currentPage['records-view'] - 1) * recordsPerPage;
+            const endIndex = Math.min(startIndex + recordsPerPage, recordCount);
+            const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
+            
+            // Populate table
+            paginatedRecords.forEach(record => {
                 const assignedEngineer = assignments.find(a => a.recordId === record.id);
                 const engineerName = assignedEngineer ? assignedEngineer.engineerName : 'Not Assigned';
                 
@@ -1135,6 +1924,7 @@
                     <td>${warrantyText}</td>
                     <td>${record.date}</td>
                     <td>${engineerName}</td>
+                    <td>${record.paymentStatus} (₹${record.balance})</td>
                     <td class="action-buttons">
                         <button class="btn btn-primary edit-btn" data-id="${record.id}">Edit</button>
                         <button class="btn btn-danger delete-btn" data-id="${record.id}">Delete</button>
@@ -1146,60 +1936,14 @@
             });
             
             // Add event listeners to buttons
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const recordId = parseInt(this.getAttribute('data-id'));
-                    editRecord(recordId);
-                });
-            });
+            addRecordEventListeners();
             
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const recordId = parseInt(this.getAttribute('data-id'));
-                    if (confirm('Are you sure you want to delete this record?')) {
-                        deleteRecord(recordId);
-                        loadAllRecords();
-                    }
-                });
-            });
-            
-            document.querySelectorAll('.view-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const recordId = parseInt(this.getAttribute('data-id'));
-                    viewRecord(recordId);
-                });
-            });
+            // Update pagination controls
+            updatePagination('records-view', totalPages);
         }
 
-        // View record details
-        function viewRecord(recordId) {
-            const record = records.find(r => r.id === recordId);
-            if (!record) return;
-            
-            // You can implement a detailed view modal here
-            let details = `
-                <h3>Record Details</h3>
-                <p><strong>Customer Number:</strong> ${record.customerNumber}</p>
-                <p><strong>Customer Name:</strong> ${record.customerName} ${record.surname}</p>
-                <p><strong>Email:</strong> ${record.email}</p>
-                <p><strong>Contact:</strong> ${record.phone}</p>
-                <p><strong>Address:</strong> ${record.address}, ${record.pincode}, ${record.state}, ${record.country}</p>
-                <hr>
-                <p><strong>Machine Name:</strong> ${record.machineName}</p>
-                <p><strong>Serial Number:</strong> ${record.machineSerial}</p>
-                <p><strong>Warranty Status:</strong> ${getWarrantyText(record.warrantyStatus)}</p>
-                <p><strong>Record Status:</strong> ${record.recordStatus}</p>
-                <p><strong>Date:</strong> ${record.date}</p>
-                <p><strong>Remarks:</strong> ${record.remarks}</p>
-                <p><strong>Balance:</strong> ₹${record.balance}</p>
-                <p><strong>Payment Status:</strong> ${record.paymentStatus}</p>
-            `;
-            
-            alert(details); // In a real app, you'd use a modal instead of alert
-        }
-
-        // Load assignment records
-        function loadAssignmentRecords() {
+        // Load assignment records with pagination
+        function loadAssignmentRecords(filterEngineer = '', filterStatus = '', page = 1) {
             const recordSelect = document.getElementById('record-select');
             const assignmentsTable = document.getElementById('assignments-table');
             
@@ -1219,8 +1963,32 @@
                 recordSelect.appendChild(option);
             });
             
+            // Filter assignments
+            let filteredAssignments = [...assignments];
+            
+            if (filterEngineer) {
+                filteredAssignments = filteredAssignments.filter(a => a.engineerId === filterEngineer);
+            }
+            
+            if (filterStatus) {
+                filteredAssignments = filteredAssignments.filter(a => a.status === filterStatus);
+            }
+            
+            // Update record count
+            const assignmentCount = filteredAssignments.length;
+            document.getElementById('assignments-count').textContent = `Showing ${assignmentCount} assignments`;
+            
+            // Calculate pagination
+            const totalPages = Math.ceil(assignmentCount / recordsPerPage);
+            currentPage['engineer-assignment'] = Math.min(page, totalPages);
+            
+            // Get assignments for current page
+            const startIndex = (currentPage['engineer-assignment'] - 1) * recordsPerPage;
+            const endIndex = Math.min(startIndex + recordsPerPage, assignmentCount);
+            const paginatedAssignments = filteredAssignments.slice(startIndex, endIndex);
+            
             // Populate assignments table
-            assignments.forEach(assignment => {
+            paginatedAssignments.forEach(assignment => {
                 const record = records.find(r => r.id === assignment.recordId);
                 if (!record) return;
                 
@@ -1234,6 +2002,7 @@
                     <td class="action-buttons">
                         <button class="btn btn-primary view-assignment-btn" data-id="${assignment.recordId}">View</button>
                         <button class="btn btn-danger remove-assignment-btn" data-id="${assignment.recordId}">Remove</button>
+                        <button class="btn btn-warning edit-assignment-btn" data-id="${assignment.recordId}">Edit</button>
                     </td>
                 `;
                 assignmentsTable.appendChild(row);
@@ -1243,7 +2012,7 @@
             document.querySelectorAll('.view-assignment-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const recordId = parseInt(this.getAttribute('data-id'));
-                    viewAssignment(recordId);
+                    viewAssignmentDetails(recordId);
                 });
             });
             
@@ -1255,94 +2024,124 @@
                     }
                 });
             });
+            
+            document.querySelectorAll('.edit-assignment-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const recordId = parseInt(this.getAttribute('data-id'));
+                    editAssignment(recordId);
+                });
+            });
+            
+            // Update pagination controls
+            updatePagination('engineer-assignment', totalPages);
         }
 
-        // View assignment details
-        function viewAssignment(recordId) {
+        // Edit assignment
+        function editAssignment(recordId) {
             const assignment = assignments.find(a => a.recordId === recordId);
-            const record = records.find(r => r.id === recordId);
+            if (!assignment) return;
             
-            if (!assignment || !record) return;
-            
-            let details = `
-                <h3>Assignment Details</h3>
-                <p><strong>Record ID:</strong> ${record.customerNumber}</p>
-                <p><strong>Customer:</strong> ${record.customerName}</p>
-                <p><strong>Machine:</strong> ${record.machineName} (${record.machineSerial})</p>
-                <hr>
-                <p><strong>Assigned Engineer:</strong> ${assignment.engineerName} (${assignment.engineerId})</p>
-                <p><strong>Assignment Date:</strong> ${assignment.assignmentDate}</p>
-                <p><strong>Status:</strong> ${assignment.status}</p>
-                <p><strong>Remarks:</strong> ${assignment.remarks}</p>
+            // Update modal with edit form
+            modalContent.innerHTML = `
+                <h3>Edit Assignment</h3>
+                <form id="edit-assignment-form">
+                    <div class="form-group">
+                        <label for="edit-engineer-select">Engineer</label>
+                        <select id="edit-engineer-select" required>
+                            <option value="EI102019004" ${assignment.engineerId === 'EI102019004' ? 'selected' : ''}>Dev Makwana (EI102019004)</option>
+                            <option value="EI112034005" ${assignment.engineerId === 'EI112034005' ? 'selected' : ''}>Hanuman Bishnoi (EI112034005)</option>
+                            <option value="EI4590778809" ${assignment.engineerId === 'EI4590778809' ? 'selected' : ''}>Mukesh Tanwar (EI4590778809)</option>
+                            <option value="EI889906551" ${assignment.engineerId === 'EI889906551' ? 'selected' : ''}>Dharmendra Singh (EI889906551)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-assignment-status">Status</label>
+                        <select id="edit-assignment-status" required>
+                            <option value="Assigned" ${assignment.status === 'Assigned' ? 'selected' : ''}>Assigned</option>
+                            <option value="In Progress" ${assignment.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="Completed" ${assignment.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                            <option value="On Hold" ${assignment.status === 'On Hold' ? 'selected' : ''}>On Hold</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-assignment-remarks">Remarks</label>
+                        <textarea id="edit-assignment-remarks">${assignment.remarks || ''}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Update Assignment</button>
+                        <button type="button" class="btn btn-warning" onclick="closeModalFunc()">Cancel</button>
+                    </div>
+                </form>
             `;
             
-            alert(details); // In a real app, use a modal
+            document.getElementById('edit-assignment-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateAssignment(recordId);
+            });
+            
+            recordModal.style.display = 'block';
+        }
+
+        // Update assignment
+        function updateAssignment(recordId) {
+            const assignmentIndex = assignments.findIndex(a => a.recordId === recordId);
+            if (assignmentIndex === -1) return;
+            
+            const engineerId = document.getElementById('edit-engineer-select').value;
+            const engineerOption = document.getElementById('edit-engineer-select').selectedOptions[0];
+            const engineerName = engineerOption.textContent.split('(')[0].trim();
+            
+            assignments[assignmentIndex] = {
+                ...assignments[assignmentIndex],
+                engineerId: engineerId,
+                engineerName: engineerName,
+                status: document.getElementById('edit-assignment-status').value,
+                remarks: document.getElementById('edit-assignment-remarks').value
+            };
+            
+            // Also update the assigned engineer in the record
+            const recordIndex = records.findIndex(r => r.id === recordId);
+            if (recordIndex !== -1) {
+                records[recordIndex].assignedEngineer = engineerId;
+            }
+            
+            alert('Assignment updated successfully!');
+            closeModalFunc();
+            loadAssignmentRecords();
+            loadAllRecords();
         }
 
         // Remove assignment
         function removeAssignment(recordId) {
             assignments = assignments.filter(a => a.recordId !== recordId);
+            
+            // Also remove the assigned engineer from the record
+            const recordIndex = records.findIndex(r => r.id === recordId);
+            if (recordIndex !== -1) {
+                records[recordIndex].assignedEngineer = '';
+            }
+            
             loadAssignmentRecords();
+            loadAllRecords();
         }
 
-        // Initialize form submissions
-        function initForms() {
-            // Customer form
-            const customerForm = document.getElementById('customer-form');
-            customerForm.addEventListener('submit', function(e) {
+        // Reset customer form
+        function resetCustomerForm() {
+            document.getElementById('customer-form').reset();
+            generateCustomerNumber();
+            customerFormTitle.textContent = 'New Customer Information';
+            saveCustomerBtn.textContent = 'Save';
+            cancelEditBtn.style.display = 'none';
+            document.getElementById('image-preview').innerHTML = '';
+            
+            // Reset form submit to handle new customer
+            document.getElementById('customer-form').onsubmit = function(e) {
                 e.preventDefault();
                 saveNewCustomer();
-            });
-            
-            // Assignment form
-            const assignmentForm = document.getElementById('assignment-form');
-            assignmentForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                saveAssignment();
-            });
-            
-            // Account form
-            const accountForm = document.getElementById('account-form');
-            accountForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                updateAccount();
-            });
-            
-            // Search buttons
-            document.getElementById('search-btn').addEventListener('click', function() {
-                const statusFilter = document.getElementById('status-filter').value;
-                const warrantyFilter = document.getElementById('warranty-filter').value;
-                loadJobRequests(statusFilter, warrantyFilter);
-            });
-            
-            document.getElementById('view-search-btn').addEventListener('click', function() {
-                const statusFilter = document.getElementById('view-status-filter').value;
-                loadAllRecords(statusFilter);
-            });
-            
-            // Report type change
-            document.getElementById('report-type').addEventListener('change', function() {
-                const reportType = this.value;
-                document.getElementById('month-select-group').style.display = 
-                    reportType === 'monthly' ? 'block' : 'none';
-                document.getElementById('year-select-group').style.display = 
-                    reportType === 'monthly' || reportType === 'yearly' ? 'block' : 'none';
-                document.getElementById('custom-date-group').style.display = 
-                    reportType === 'custom' ? 'block' : 'none';
-                document.getElementById('custom-date-to-group').style.display = 
-                    reportType === 'custom' ? 'block' : 'none';
-            });
-            
-            // Generate report button
-            document.getElementById('generate-report-btn').addEventListener('click', function() {
-                generateReport();
-            });
-            
-            // Print PDF button
-            document.getElementById('print-pdf').addEventListener('click', function() {
-                alert('PDF generation would be implemented here');
-                // In a real app, this would generate a PDF of the current record
-            });
+            };
         }
 
         // Save new customer
@@ -1374,20 +2173,8 @@
             records.push(newRecord);
             alert('Customer record saved successfully!');
             resetCustomerForm();
-            generateCustomerNumber();
-            document.querySelector('[data-section="job-requests"]').click();
-        }
-
-        // Reset customer form
-        function resetCustomerForm() {
-            document.getElementById('customer-form').reset();
-            generateCustomerNumber();
-            const saveBtn = document.querySelector('#customer-form button[type="submit"]');
-            saveBtn.textContent = 'Save';
-            document.getElementById('customer-form').onsubmit = function(e) {
-                e.preventDefault();
-                saveNewCustomer();
-            };
+            loadJobRequests();
+            loadAllRecords();
         }
 
         // Save assignment
@@ -1401,11 +2188,18 @@
                 return;
             }
             
+            const record = records.find(r => r.id === recordId);
+            if (!record) {
+                alert('Selected record not found');
+                return;
+            }
+            
             const engineerOption = document.getElementById('engineer-select').selectedOptions[0];
             const engineerName = engineerOption.textContent.split('(')[0].trim();
             
             const newAssignment = {
                 recordId: recordId,
+                customerName: record.customerName,
                 engineerId: engineerId,
                 engineerName: engineerName,
                 assignmentDate: new Date().toISOString().split('T')[0],
@@ -1414,9 +2208,14 @@
             };
             
             assignments.push(newAssignment);
+            
+            // Update the record with assigned engineer
+            record.assignedEngineer = engineerId;
+            
             alert('Engineer assigned successfully!');
             document.getElementById('assignment-form').reset();
             loadAssignmentRecords();
+            loadAllRecords();
         }
 
         // Update account
@@ -1453,6 +2252,7 @@
         // Generate report
         function generateReport() {
             const reportType = document.getElementById('report-type').value;
+            const reportFormat = document.getElementById('report-format').value;
             let filteredRecords = [...records];
             
             if (reportType === 'monthly') {
@@ -1486,32 +2286,73 @@
             summary.innerHTML = `
                 <p><strong>Report Period:</strong> ${getReportPeriodText(reportType)}</p>
                 <p><strong>Total Records:</strong> ${filteredRecords.length}</p>
-                <p><strong>Create Status:</strong> ${filteredRecords.filter(r => r.recordStatus === 'create').length}</p>
-                <p><strong>Accept Status:</strong> ${filteredRecords.filter(r => r.recordStatus === 'accept').length}</p>
-                <p><strong>Running Status:</strong> ${filteredRecords.filter(r => r.recordStatus === 'running').length}</p>
-                <p><strong>Hold Status:</strong> ${filteredRecords.filter(r => r.recordStatus === 'hold').length}</p>
-                <p><strong>Public Holiday:</strong> ${filteredRecords.filter(r => r.recordStatus === 'public-holiday').length}</p>
+                <div class="form-row">
+                    <div class="form-group">
+                        <p><strong>Create Status:</strong> ${filteredRecords.filter(r => r.recordStatus === 'create').length}</p>
+                        <p><strong>Accept Status:</strong> ${filteredRecords.filter(r => r.recordStatus === 'accept').length}</p>
+                    </div>
+                    <div class="form-group">
+                        <p><strong>Running Status:</strong> ${filteredRecords.filter(r => r.recordStatus === 'running').length}</p>
+                        <p><strong>Hold Status:</strong> ${filteredRecords.filter(r => r.recordStatus === 'hold').length}</p>
+                    </div>
+                    <div class="form-group">
+                        <p><strong>Public Holiday:</strong> ${filteredRecords.filter(r => r.recordStatus === 'public-holiday').length}</p>
+                        <p><strong>Assigned Jobs:</strong> ${filteredRecords.filter(r => r.assignedEngineer).length}</p>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <p><strong>In Warranty:</strong> ${filteredRecords.filter(r => r.warrantyStatus === 'in-warranty').length}</p>
+                    </div>
+                    <div class="form-group">
+                        <p><strong>Out of Warranty:</strong> ${filteredRecords.filter(r => r.warrantyStatus === 'out-warranty').length}</p>
+                    </div>
+                    <div class="form-group">
+                        <p><strong>AMC:</strong> ${filteredRecords.filter(r => r.warrantyStatus === 'amc').length}</p>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <p><strong>Pending Payments:</strong> ${filteredRecords.filter(r => r.paymentStatus === 'pending').length}</p>
+                    </div>
+                    <div class="form-group">
+                        <p><strong>Partial Payments:</strong> ${filteredRecords.filter(r => r.paymentStatus === 'partial').length}</p>
+                    </div>
+                    <div class="form-group">
+                        <p><strong>Completed Payments:</strong> ${filteredRecords.filter(r => r.paymentStatus === 'completed').length}</p>
+                    </div>
+                </div>
+                <p><strong>Total Revenue:</strong> ₹${filteredRecords.reduce((sum, r) => sum + (r.balance || 0), 0)}</p>
             `;
             
-            // Display report records
-            const reportTable = document.getElementById('report-records-table');
-            reportTable.innerHTML = '';
-            
-            filteredRecords.forEach(record => {
-                const assignedEngineer = assignments.find(a => a.recordId === record.id);
-                const engineerName = assignedEngineer ? assignedEngineer.engineerName : 'Not Assigned';
+            // Show/hide detailed records based on report format
+            if (reportFormat === 'detailed') {
+                document.getElementById('detailed-records-heading').style.display = 'block';
+                const reportTable = document.getElementById('report-records-table');
+                reportTable.style.display = 'table';
+                const tbody = reportTable.querySelector('tbody');
+                tbody.innerHTML = '';
                 
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${record.customerNumber}</td>
-                    <td>${record.customerName} ${record.surname}</td>
-                    <td>${record.machineName}</td>
-                    <td>${record.recordStatus}</td>
-                    <td>${record.date}</td>
-                    <td>${engineerName}</td>
-                `;
-                reportTable.appendChild(row);
-            });
+                filteredRecords.forEach(record => {
+                    const assignedEngineer = assignments.find(a => a.recordId === record.id);
+                    const engineerName = assignedEngineer ? assignedEngineer.engineerName : 'Not Assigned';
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${record.customerNumber}</td>
+                        <td>${record.customerName} ${record.surname}</td>
+                        <td>${record.machineName}</td>
+                        <td>${record.recordStatus}</td>
+                        <td>${record.date}</td>
+                        <td>${engineerName}</td>
+                        <td>${record.paymentStatus} (₹${record.balance})</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                document.getElementById('detailed-records-heading').style.display = 'none';
+                document.getElementById('report-records-table').style.display = 'none';
+            }
         }
 
         // Get report period text
@@ -1547,9 +2388,146 @@
             yearSelect.value = currentYear;
         }
 
+        // Image preview for upload
+        document.getElementById('image-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = document.createElement('img');
+                img.src = event.target.result;
+                img.style.maxWidth = '200px';
+                img.style.maxHeight = '200px';
+                document.getElementById('image-preview').innerHTML = '';
+                document.getElementById('image-preview').appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Date range filter toggle
+        document.getElementById('date-range-filter').addEventListener('change', function() {
+            const isCustom = this.value === 'custom';
+            document.getElementById('custom-date-filter-group').style.display = isCustom ? 'block' : 'none';
+            document.getElementById('custom-date-to-filter-group').style.display = isCustom ? 'block' : 'none';
+        });
+
+        // Report type filter toggle
+        document.getElementById('report-type').addEventListener('change', function() {
+            const reportType = this.value;
+            document.getElementById('month-select-group').style.display = 
+                reportType === 'monthly' ? 'block' : 'none';
+            document.getElementById('year-select-group').style.display = 
+                reportType === 'monthly' || reportType === 'yearly' ? 'block' : 'none';
+            document.getElementById('custom-date-group').style.display = 
+                reportType === 'custom' ? 'block' : 'none';
+            document.getElementById('custom-date-to-group').style.display = 
+                reportType === 'custom' ? 'block' : 'none';
+        });
+
         // Initialize the application
         function init() {
-            initForms();
+            // Job Requests filters
+            document.getElementById('search-btn').addEventListener('click', function() {
+                loadJobRequests(
+                    document.getElementById('status-filter').value,
+                    document.getElementById('warranty-filter').value,
+                    document.getElementById('customer-name-filter').value,
+                    document.getElementById('machine-filter').value,
+                    document.getElementById('date-range-filter').value,
+                    document.getElementById('custom-date-from-filter').value,
+                    document.getElementById('custom-date-to-filter').value
+                );
+            });
+            
+            document.getElementById('reset-filters-btn').addEventListener('click', function() {
+                document.getElementById('status-filter').value = '';
+                document.getElementById('warranty-filter').value = '';
+                document.getElementById('customer-name-filter').value = '';
+                document.getElementById('machine-filter').value = '';
+                document.getElementById('date-range-filter').value = '';
+                document.getElementById('custom-date-from-filter').value = '';
+                document.getElementById('custom-date-to-filter').value = '';
+                loadJobRequests();
+            });
+            
+            document.getElementById('export-csv-btn').addEventListener('click', function() {
+                alert('CSV export functionality would be implemented here');
+                // In a real app, this would generate a CSV file
+            });
+            
+            // Records View filters
+            document.getElementById('view-search-btn').addEventListener('click', function() {
+                loadAllRecords(
+                    document.getElementById('view-status-filter').value,
+                    document.getElementById('view-warranty-filter').value,
+                    document.getElementById('view-engineer-filter').value,
+                    document.getElementById('view-payment-filter').value,
+                    document.getElementById('date-from').value,
+                    document.getElementById('date-to').value,
+                    document.getElementById('search-text').value
+                );
+            });
+            
+            document.getElementById('view-reset-btn').addEventListener('click', function() {
+                document.getElementById('view-status-filter').value = '';
+                document.getElementById('view-warranty-filter').value = '';
+                document.getElementById('view-engineer-filter').value = '';
+                document.getElementById('view-payment-filter').value = '';
+                document.getElementById('date-from').value = '';
+                document.getElementById('date-to').value = '';
+                document.getElementById('search-text').value = '';
+                loadAllRecords();
+            });
+            
+            // Engineer Assignment filters
+            document.getElementById('assignment-search-btn').addEventListener('click', function() {
+                loadAssignmentRecords(
+                    document.getElementById('assignment-engineer-filter').value,
+                    document.getElementById('assignment-status-filter').value
+                );
+            });
+            
+            // Assignment form
+            document.getElementById('assignment-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveAssignment();
+            });
+            
+            // Customer form
+            document.getElementById('customer-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveNewCustomer();
+            });
+            
+            // Account form
+            document.getElementById('account-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateAccount();
+            });
+            
+            // Print PDF button
+            document.getElementById('print-pdf').addEventListener('click', function() {
+                alert('PDF generation would be implemented here');
+                // In a real app, this would generate a PDF of the current record
+            });
+            
+            // Generate report button
+            document.getElementById('generate-report-btn').addEventListener('click', function() {
+                generateReport();
+            });
+            
+            // Print report button
+            document.getElementById('print-report-btn').addEventListener('click', function() {
+                window.print();
+            });
+            
+            // Export report button
+            document.getElementById('export-report-btn').addEventListener('click', function() {
+                alert('Report export functionality would be implemented here');
+                // In a real app, this would export the report in selected format
+            });
+            
             initYearDropdown();
         }
 
